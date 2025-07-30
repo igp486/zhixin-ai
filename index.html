@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>知心御姐 AI 聊天 · QQ 风格</title>
+  <style>
+    body { font-family: "Microsoft YaHei", sans-serif; background: #f0f0f0; margin: 0; padding: 0; }
+    .container { width: 400px; margin: 50px auto; background: #fff; border: 1px solid #ccc; border-radius: 5px; display: flex; flex-direction: column; height: 90vh; }
+    .header { background: #0078d7; color: #fff; padding: 10px; font-size: 18px; border-top-left-radius:5px; border-top-right-radius:5px; }
+    .chat-window { flex: 1; padding: 10px; overflow-y: auto; background: #e5e5e5; }
+    .msg { margin: 10px 0; max-width: 80%; clear: both; }
+    .msg.user { text-align: right; }
+    .msg.assistant { text-align: left; }
+    .bubble { display: inline-block; padding: 8px 12px; border-radius: 15px; }
+    .msg.user .bubble { background: #cdeffd; }
+    .msg.assistant .bubble { background: #fff; border: 1px solid #ccc; }
+    .input-area { display: flex; border-top: 1px solid #ccc; }
+    textarea { flex: 1; resize: none; border: none; padding: 8px; font-size: 14px; outline: none; }
+    button { width: 80px; background: #0078d7; color: #fff; border: none; font-size: 16px; cursor: pointer; }
+    button:active { background: #005fa1; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">知心御姐 AI 聊天窗口</div>
+    <div class="chat-window" id="chatWindow"></div>
+    <div class="input-area">
+      <textarea id="inputBox" rows="2" placeholder="输入消息..." ></textarea>
+      <button id="sendBtn">发送</button>
+    </div>
+  </div>
+  <script>
+    const chatWindow = document.getElementById('chatWindow');
+    const inputBox = document.getElementById('inputBox');
+    const sendBtn = document.getElementById('sendBtn');
+
+    async function getAIReply(userText) {
+      const res = await fetch('/api/message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userText })
+      });
+      const data = await res.json();
+      return data.reply;
+    }
+
+    function appendMessage(role, text) {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'msg ' + role;
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.textContent = text;
+      msgDiv.appendChild(bubble);
+      chatWindow.appendChild(msgDiv);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const text = inputBox.value.trim();
+      if (!text) return;
+      appendMessage('user', text);
+      inputBox.value = '';
+      sendBtn.disabled = true;
+      try {
+        const reply = await getAIReply(text);
+        appendMessage('assistant', reply);
+      } catch (e) {
+        appendMessage('assistant', '对不起，小姐姐暂时无法回答~');
+      }
+      sendBtn.disabled = false;
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    inputBox.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+  </script>
+</body>
+</html>

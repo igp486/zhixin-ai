@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "api/message.js", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/api/message", "dest": "/api/message.js" },
+    { "src": "/(.*)", "dest": "/public/index.html" }
+  ]
+}
